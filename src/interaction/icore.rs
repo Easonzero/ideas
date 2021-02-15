@@ -1,6 +1,6 @@
 use crossterm::{cursor, event, execute, style, style::Colorize, terminal, Result};
 use defer::defer;
-use std::io::{BufRead, Write};
+use std::io::{BufRead, Read, Write};
 
 pub enum Direction {
     #[allow(dead_code)]
@@ -165,10 +165,15 @@ where
 
     pub fn read_input_with(&mut self, hint: Option<String>) -> Result<Option<String>> {
         match hint {
-            Some(ref hint) => writeln!(self.writer, "{}", hint[..].dark_grey())?,
-            None => writeln!(self.writer, "")?,
+            Some(ref hint) => write!(self.writer, "{}", hint[..].dark_grey())?,
+            None => write!(self.writer, "")?,
         }
-        Ok(hint)
+        execute!(self.writer, cursor::MoveToColumn(0))?;
+
+        match self.read_input()? {
+            None => Ok(hint),
+            input @ _ => Ok(input),
+        }
     }
 
     pub fn read_input(&mut self) -> Result<Option<String>> {
