@@ -1,10 +1,12 @@
 mod icore;
+mod iview;
 
 use crate::error::*;
 use crate::item::*;
 use crate::status::*;
 use crate::store::ItemPair;
 use icore::Core;
+use iview::View;
 use std::{
     fmt::{self, Debug, Display, Formatter},
     io::{StdinLock, StdoutLock},
@@ -41,11 +43,15 @@ display_enum!(Is);
 
 pub struct Interaction<'a> {
     core: IC<'a>,
+    view: View,
 }
 
 impl<'a> Interaction<'a> {
     pub fn new(core: IC<'a>) -> Self {
-        Interaction { core }
+        Interaction {
+            core,
+            view: View::new(),
+        }
     }
 
     pub fn confirm_again(&mut self) -> Result<Is> {
@@ -78,8 +84,9 @@ impl<'a> Interaction<'a> {
         Ok(item)
     }
 
-    pub fn view_item(&mut self, _item: Item) -> Result<()> {
-        unimplemented!()
+    pub fn view_item(&mut self, item: Item) -> Result<()> {
+        self.view.run(item);
+        Ok(())
     }
 
     pub fn update_item(&mut self, mut item: Item) -> Result<Item> {
