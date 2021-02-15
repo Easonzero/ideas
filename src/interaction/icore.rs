@@ -72,10 +72,10 @@ where
             }
             *cursor = *cursor % (list.len() as i32);
         };
-        execute!(
-            self.writer,
-            cursor::MoveToNextLine(visiable_lines as u16 + 1)
-        )?;
+        for _ in 0..(visiable_lines + 1) {
+            writeln!(self.writer, "")?;
+        }
+        self.writer.flush()?;
         let (begin_x, end_y) = cursor::position()?;
         let begin_y = end_y - 1 - visiable_lines as u16;
         loop {
@@ -98,19 +98,9 @@ where
                     let (new_x, new_y) = cursor::position()?;
                     cur_x = new_x;
                     cur_y = new_y;
-                    execute!(
-                        self.writer,
-                        style::SetForegroundColor(style::Color::Black),
-                        style::SetBackgroundColor(style::Color::Yellow),
-                        style::Print(item),
-                    )?;
+                    execute!(self.writer, style::Print(item.black().on_yellow()),)?;
                 } else {
-                    execute!(
-                        self.writer,
-                        style::SetForegroundColor(style::Color::Reset),
-                        style::SetBackgroundColor(style::Color::Reset),
-                        style::Print(item),
-                    )?;
+                    execute!(self.writer, style::Print(item),)?;
                 }
                 match direction {
                     Direction::Vertical => execute!(self.writer, cursor::MoveToNextLine(1))?,
@@ -171,6 +161,14 @@ where
                 }
             }
         }
+    }
+
+    pub fn read_input_with(&mut self, hint: Option<String>) -> Result<Option<String>> {
+        match hint {
+            Some(ref hint) => writeln!(self.writer, "{}", hint[..].dark_grey())?,
+            None => writeln!(self.writer, "")?,
+        }
+        Ok(hint)
     }
 
     pub fn read_input(&mut self) -> Result<Option<String>> {

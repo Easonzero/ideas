@@ -1,4 +1,4 @@
-use std::path::Path;
+use std::{fmt, fmt::Display, fmt::Formatter, path::Path};
 
 use crate::error::Result;
 use crate::item::Item;
@@ -52,15 +52,27 @@ impl Store {
     }
 }
 
+#[derive(Clone)]
+pub struct ItemPair {
+    pub id: String,
+    pub item: Item,
+}
+
 impl Iterator for Iter {
-    type Item = Result<(String, Item)>;
+    type Item = Result<ItemPair>;
     fn next(&mut self) -> Option<Self::Item> {
         let to_string = |v: &sled::IVec| String::from_utf8(AsRef::<[u8]>::as_ref(v).to_vec());
         self.iter.next().map(|x| {
             let (k, v) = x?;
-            let kr = to_string(&k)?;
-            let vr = serde_json::from_str(to_string(&v)?.as_str())?;
-            Ok((kr, vr))
+            let id = to_string(&k)?;
+            let item = serde_json::from_str(to_string(&v)?.as_str())?;
+            Ok(ItemPair { id, item })
         })
+    }
+}
+
+impl Display for ItemPair {
+    fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
+        Display::fmt(&self.item, f)
     }
 }
