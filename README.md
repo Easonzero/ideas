@@ -3,7 +3,7 @@
 `ideas` is a cli tools to write your idea in your terminal.
 
 ## Demo
-[demo](assets/demo.gif)
+![demo](assets/demo.gif)
 
 ## Features
 - tagged idea, contains `tips`, `idea`, `todo`
