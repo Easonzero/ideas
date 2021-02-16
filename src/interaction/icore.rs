@@ -1,6 +1,8 @@
-use crossterm::{cursor, event, execute, style, style::Colorize, terminal, Result};
+use super::ieditor::*;
+use crate::Result;
+use crossterm::{cursor, event, execute, style, style::Colorize, terminal};
 use defer::defer;
-use std::io::{BufRead, Read, Write};
+use std::io::{BufRead, Write};
 
 pub enum Direction {
     #[allow(dead_code)]
@@ -49,6 +51,7 @@ where
             question.white(),
             tips.blue()
         )?;
+        write!(self.writer, "❯ ")?;
         self.writer.flush()?;
         Ok(())
     }
@@ -164,11 +167,28 @@ where
     }
 
     pub fn read_input_with(&mut self, hint: Option<String>) -> Result<Option<String>> {
+        let (begin_x, mut begin_y) = cursor::position()?;
+        let (w, _) = terminal::size()?;
+        let ydist = |n: u16, w: u16, begin: u16| {
+            if n > (w - begin) {
+                1u16 + (n - w + begin) / w
+            } else {
+                0u16
+            }
+        };
         match hint {
-            Some(ref hint) => write!(self.writer, "{}", hint[..].dark_grey())?,
-            None => write!(self.writer, "")?,
+            Some(ref hint) => {
+                if let Some(n) = hint.find('\n') {
+                    begin_y = begin_y - ydist((n + 3) as u16, w, begin_x);
+                    write!(self.writer, "{}...", hint[..n].dark_grey())?
+                } else {
+                    begin_y = begin_y - ydist(hint.len() as u16, w, begin_x);
+                    write!(self.writer, "{}", hint[..].dark_grey())?
+                }
+            }
+            None => {}
         }
-        execute!(self.writer, cursor::MoveToColumn(0))?;
+        execute!(self.writer, cursor::MoveTo(begin_x, begin_y))?;
 
         match self.read_input()? {
             None => Ok(hint),
@@ -180,8 +200,10 @@ where
         let mut buf = String::new();
         self.reader.read_line(&mut buf)?;
         let postbuf = buf.trim();
-        Ok(if postbuf == "" {
+        Ok(if postbuf == "" || postbuf == "\n" {
             None
+        } else if postbuf.starts_with("!") {
+            read_from_editor(postbuf[1..].trim())?
         } else {
             Some(postbuf.to_string())
         })

@@ -1,3 +1,4 @@
+use std::io;
 use std::string::FromUtf8Error;
 
 use failure::Fail;
@@ -12,38 +13,27 @@ pub enum Error {
     Sled(#[cause] sled::Error),
     #[fail(display = "UTF-8 error: {}", _0)]
     Utf8(#[cause] FromUtf8Error),
+    #[fail(display = "IO error: {}", _0)]
+    Io(#[cause] io::Error),
     #[fail(display = "{}", _0)]
     StringError(String),
 }
 
-impl From<serde_json::Error> for Error {
-    fn from(err: serde_json::Error) -> Error {
-        Error::Serde(err)
-    }
+macro_rules! derive_from {
+    ($src:path, $dst:path) => {
+        impl From<$src> for Error {
+            fn from(err: $src) -> Error {
+                $dst(err)
+            }
+        }
+    };
 }
 
-impl From<sled::Error> for Error {
-    fn from(err: sled::Error) -> Error {
-        Error::Sled(err)
-    }
-}
-
-impl From<crossterm::ErrorKind> for Error {
-    fn from(err: crossterm::ErrorKind) -> Error {
-        Error::Crossterm(err)
-    }
-}
-
-impl From<FromUtf8Error> for Error {
-    fn from(err: FromUtf8Error) -> Error {
-        Error::Utf8(err)
-    }
-}
-
-impl From<String> for Error {
-    fn from(s: String) -> Error {
-        Error::StringError(s)
-    }
-}
+derive_from!(serde_json::Error, Error::Serde);
+derive_from!(sled::Error, Error::Sled);
+derive_from!(crossterm::ErrorKind, Error::Crossterm);
+derive_from!(FromUtf8Error, Error::Utf8);
+derive_from!(String, Error::StringError);
+derive_from!(io::Error, Error::Io);
 
 pub type Result<T> = std::result::Result<T, Error>;

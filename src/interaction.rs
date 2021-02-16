@@ -1,4 +1,5 @@
 mod icore;
+mod ieditor;
 mod iview;
 
 use crate::error::*;
@@ -95,27 +96,28 @@ impl<'a> Interaction<'a> {
         last(item.ty.status).map(|s| status.push(s));
         if status.len() > 1 {
             self.core
-                .question("? Please select status of the idea", "<required>")?;
+                .question("? Please select the status", "<required>")?;
             let status = self
                 .core
                 .read_input_from(status, icore::Direction::Horizontal)?;
             item.ty.status = status;
         }
 
-        self.core.question("? Please enter your idea", "<option>")?;
+        self.core
+            .question("? Please enter the summary", "[option]")?;
         item.summary = self.core.read_input_with(Some(item.summary))?.unwrap();
         self.core
-            .question("? Please enter description of the idea", "[option]")?;
+            .question("? Please enter the detail", "[option]")?;
         item.detail = self.core.read_input_with(item.detail)?;
         self.core
-            .question("? Please enter related url of the idea", "[option]")?;
+            .question("? Please enter the related url", "[option]")?;
         item.url = self.core.read_input_with(item.url)?;
         Ok(item)
     }
 
     pub fn fill_item(&mut self) -> Result<Item> {
         self.core
-            .question("? Please select type of the idea", "<required>")?;
+            .question("? Please select the type", "<required>")?;
         let ty = self.core.read_input_from(
             vec![
                 Type {
@@ -135,7 +137,7 @@ impl<'a> Interaction<'a> {
         )?;
 
         self.core
-            .question("? Please enter your idea", "<required>")?;
+            .question("? Please enter the summary", "<required>")?;
         let summary = self
             .core
             .read_input()
@@ -147,10 +149,10 @@ impl<'a> Interaction<'a> {
                 )),
             })?;
         self.core
-            .question("? Please enter description of the idea", "[option]")?;
+            .question("? Please enter the detail", "[option]")?;
         let detail = self.core.read_input()?;
         self.core
-            .question("? Please enter related url of the idea", "[option]")?;
+            .question("? Please enter the related url", "[option]")?;
         let url = self.core.read_input()?;
         Ok(Item {
             ty,

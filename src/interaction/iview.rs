@@ -14,13 +14,13 @@ static SUMMARY_TEMPLATE: &str = r#"
 
 static DETAIL_TEMPLATE: &str = r#"
 ## Detail
-> ${detail}
+${detail}
 --------------------
 "#;
 
 static URL_TEMPLATE: &str = r#"
 ## Reference
-* *${url}*
+${url}
 --------------------
 "#;
 
@@ -36,6 +36,8 @@ impl View {
         let mut skin = MadSkin::default();
         skin.bold.set_fg(DarkRed);
         skin.paragraph.set_fg(Blue);
+        skin.italic
+            .add_attr(crossterm::style::Attribute::Underlined);
         for header in skin.headers.iter_mut() {
             header.set_fg(Yellow);
         }
@@ -59,7 +61,18 @@ impl View {
         let summary_str =
             FmtText::from_text(&self.skin, expander.expand(&self.summary), Some(w as usize));
         let detail_str = if let Some(detail) = item.detail {
-            expander_d.set("detail", detail);
+            let lines: Vec<String> = detail
+                .lines()
+                .map(|x| {
+                    if x.starts_with("> ") {
+                        format!("{}  \n", x)
+                    } else {
+                        format!("> {}  \n", x)
+                    }
+                })
+                .collect();
+            let detail: String = lines.iter().flat_map(|s| s.chars()).collect();
+            expander_d.set_lines_md("detail", detail);
             FmtText::from_text(
                 &self.skin,
                 expander_d.expand(&self.detail),
@@ -69,7 +82,18 @@ impl View {
             FmtText::from(&self.skin, "", Some(w as usize))
         };
         let url_str = if let Some(url) = item.url {
-            expander_u.set("url", url);
+            let lines: Vec<String> = url
+                .lines()
+                .map(|x| {
+                    if x.starts_with("* ") {
+                        format!("{}  \n", x)
+                    } else {
+                        format!("* *{}*  \n", x)
+                    }
+                })
+                .collect();
+            let url: String = lines.iter().flat_map(|s| s.chars()).collect();
+            expander_u.set_lines_md("url", url);
             FmtText::from_text(&self.skin, expander_u.expand(&self.url), Some(w as usize))
         } else {
             FmtText::from(&self.skin, "", Some(w as usize))
