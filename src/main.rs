@@ -11,7 +11,7 @@ use interaction::{Interaction, Is, Op, IC};
 use std::io::{stdin, stdout};
 use store::{ItemPair, Store};
 
-const DATA_DIR: &'static str = ".configs/ideas";
+const DATA_DIR: &'static str = ".config/ideas";
 
 fn main() {
     match main_throw_err() {
