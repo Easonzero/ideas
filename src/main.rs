@@ -1,7 +1,6 @@
 mod error;
 mod interaction;
 mod item;
-mod parser;
 mod status;
 mod store;
 
@@ -12,7 +11,7 @@ use interaction::{Interaction, Is, Op, IC};
 use std::io::{stdin, stdout};
 use store::{ItemPair, Store};
 
-const DATA_DIR: &'static str = ".ideas";
+const DATA_DIR: &'static str = ".configs/ideas";
 
 fn main() {
     match main_throw_err() {
@@ -31,9 +30,6 @@ fn main_throw_err() -> Result<()> {
         (about: crate_description!())
         (@subcommand view =>
             (about: "list ideas"))
-        (@subcommand sync =>
-            (about: "sync local with remote storage")
-            (@arg REMOTE: <REMOTE> ... possible_values(&["notion"]) "the remote storage"))
     )
     .get_matches();
 
@@ -69,7 +65,6 @@ fn main_throw_err() -> Result<()> {
             }
             Ok(())
         }
-        Some(("sync", _matches)) => unimplemented!(),
         _ => {
             let item = interaction.fill_item()?;
             store.insert(&item)?;
