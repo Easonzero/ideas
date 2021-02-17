@@ -14,6 +14,7 @@ use std::{
 };
 
 pub type IC<'a> = Core<StdinLock<'a>, StdoutLock<'a>>;
+pub use icore::Searchable;
 
 #[derive(Clone, Debug)]
 pub enum Op {
@@ -29,18 +30,23 @@ pub enum Is {
     No,
 }
 
-macro_rules! display_enum {
+macro_rules! derive_enum {
     ($id: ident) => {
         impl Display for $id {
             fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
                 Debug::fmt(self, f)
             }
         }
+        impl Searchable for $id {
+            fn is_match(&self, pat: &String) -> bool {
+                self.to_string().contains(pat)
+            }
+        }
     };
 }
 
-display_enum!(Op);
-display_enum!(Is);
+derive_enum!(Op);
+derive_enum!(Is);
 
 pub struct Interaction<'a> {
     core: IC<'a>,
@@ -91,16 +97,16 @@ impl<'a> Interaction<'a> {
     }
 
     pub fn update_item(&mut self, mut item: Item) -> Result<Item> {
-        let mut status = vec![item.ty.status];
-        next(item.ty.status).map(|s| status.push(s));
-        last(item.ty.status).map(|s| status.push(s));
+        let mut status = vec![item.ty.status()];
+        item.ty.next_status().map(|s| status.push(s));
+        item.ty.last_status().map(|s| status.push(s));
         if status.len() > 1 {
             self.core
                 .question("? Please select the status", "<required>")?;
             let status = self
                 .core
                 .read_input_from(status, icore::Direction::Horizontal)?;
-            item.ty.status = status;
+            item.ty = Type::new(status);
         }
 
         self.core
@@ -112,27 +118,15 @@ impl<'a> Interaction<'a> {
         self.core
             .question("? Please enter the related url", "[option]")?;
         item.url = self.core.read_input_with(item.url)?;
+        item.time = std::time::SystemTime::now();
         Ok(item)
     }
 
-    pub fn fill_item(&mut self) -> Result<Item> {
+    pub fn fill_item(&mut self, skip: bool) -> Result<Item> {
         self.core
             .question("? Please select the type", "<required>")?;
         let ty = self.core.read_input_from(
-            vec![
-                Type {
-                    status: UNDONE,
-                    desc: "todo".to_owned(),
-                },
-                Type {
-                    status: IDEA,
-                    desc: "idea".to_owned(),
-                },
-                Type {
-                    status: TIPS,
-                    desc: "tips".to_owned(),
-                },
-            ],
+            vec![Type::new(IDEA), Type::new(TIPS), Type::new(UNDONE)],
             icore::Direction::Horizontal,
         )?;
 
@@ -148,17 +142,25 @@ impl<'a> Interaction<'a> {
                     "the field `idea` is required!".to_string(),
                 )),
             })?;
-        self.core
-            .question("? Please enter the detail", "[option]")?;
-        let detail = self.core.read_input()?;
-        self.core
-            .question("? Please enter the related url", "[option]")?;
-        let url = self.core.read_input()?;
+        let detail;
+        let url;
+        if !skip {
+            self.core
+                .question("? Please enter the detail", "[option]")?;
+            detail = self.core.read_input()?;
+            self.core
+                .question("? Please enter the related url", "[option]")?;
+            url = self.core.read_input()?;
+        } else {
+            detail = None;
+            url = None;
+        }
         Ok(Item {
             ty,
             summary,
             detail,
             url,
+            time: std::time::SystemTime::now(),
         })
     }
 }

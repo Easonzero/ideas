@@ -1,7 +1,7 @@
 use std::{fmt, fmt::Display, fmt::Formatter, path::Path};
 
-use crate::error::Result;
 use crate::item::Item;
+use crate::{error::Result, interaction::Searchable};
 
 pub struct Store {
     db: sled::Db,
@@ -74,5 +74,11 @@ impl Iterator for Iter {
 impl Display for ItemPair {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         Display::fmt(&self.item, f)
+    }
+}
+
+impl Searchable for ItemPair {
+    fn is_match(&self, pat: &String) -> bool {
+        self.item.is_match(pat)
     }
 }

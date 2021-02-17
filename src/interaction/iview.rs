@@ -56,8 +56,8 @@ impl View {
         let mut expander_u = OwningTemplateExpander::new();
         expander
             .set("summary", item.summary)
-            .set("ty", item.ty.desc)
-            .set("status", item.ty.status);
+            .set("ty", item.ty.desc())
+            .set("status", item.ty.status());
         let summary_str =
             FmtText::from_text(&self.skin, expander.expand(&self.summary), Some(w as usize));
         let detail_str = if let Some(detail) = item.detail {
