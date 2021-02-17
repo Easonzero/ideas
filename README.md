@@ -18,3 +18,6 @@
 ```sh
 $ cargo install ideas
 ```
+
+## Repository
+[https://github.com/Easonzero/ideas](https://github.com/Easonzero/ideas)
