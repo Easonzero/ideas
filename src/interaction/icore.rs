@@ -78,6 +78,10 @@ where
             list_str.push(format!("❯ {:8}\t", item));
         }
         let move_cursor = |cursor: &mut i32, step: i32, max: usize| {
+            if max == 0 {
+                *cursor = 0;
+                return;
+            }
             *cursor += step;
             while *cursor < 0i32 {
                 *cursor += max as i32;
