@@ -1,6 +1,6 @@
 [package]
 name = "ideas"
-version = "0.2.0"
+version = "0.2.1"
 authors = ["wangyi <wangyi@megvii.com>"]
 edition = "2018"
 description = "A cli tool to record your ideas"
