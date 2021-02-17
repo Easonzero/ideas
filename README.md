@@ -12,6 +12,7 @@
 - write your idea by your prefer editor or write directly in terminal
 - view in terminal, support markdown format
 - CURD
+- search by tag, summary, or detail of an idea
 
 ## Installation
 **[Cargo](https://doc.rust-lang.org/cargo)**
