@@ -1,5 +1,5 @@
 use super::ieditor::*;
-use crate::Result;
+use crate::{error::Error, Result};
 use crossterm::{cursor, event, execute, style, style::Colorize, terminal};
 use defer::defer;
 use std::io::{BufRead, Write};
@@ -190,7 +190,7 @@ where
                             if event.modifiers.contains(event::KeyModifiers::CONTROL) =>
                         {
                             drop(reset);
-                            panic!("Terminate by Ctrl-C");
+                            return Err(Error::StringError("Terminate by Ctrl-C".to_owned()));
                         }
                         event::KeyCode::Esc => {
                             if search {
