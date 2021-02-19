@@ -228,7 +228,11 @@ where
         }
     }
 
-    pub fn read_input_with(&mut self, hint: Option<String>) -> Result<Option<String>> {
+    pub fn read_input_with(
+        &mut self,
+        editor: bool,
+        hint: Option<String>,
+    ) -> Result<Option<String>> {
         let (begin_x, mut begin_y) = cursor::position()?;
         let (w, _) = terminal::size()?;
         let ydist = |n: u16, w: u16, begin: u16| {
@@ -252,20 +256,26 @@ where
         }
         execute!(self.writer, cursor::MoveTo(begin_x, begin_y))?;
 
-        match self.read_input()? {
-            None => Ok(hint),
-            input @ _ => Ok(input),
-        }
+        let mut buf = String::new();
+        self.reader.read_line(&mut buf)?;
+        let postbuf = buf.trim();
+        Ok(if postbuf == "" || postbuf == "\n" {
+            hint
+        } else if editor && postbuf.starts_with("!") {
+            read_from_editor(postbuf[1..].trim(), hint)?
+        } else {
+            Some(postbuf.to_string())
+        })
     }
 
-    pub fn read_input(&mut self) -> Result<Option<String>> {
+    pub fn read_input(&mut self, editor: bool) -> Result<Option<String>> {
         let mut buf = String::new();
         self.reader.read_line(&mut buf)?;
         let postbuf = buf.trim();
         Ok(if postbuf == "" || postbuf == "\n" {
             None
-        } else if postbuf.starts_with("!") {
-            read_from_editor(postbuf[1..].trim())?
+        } else if editor && postbuf.starts_with("!") {
+            read_from_editor(postbuf[1..].trim(), None)?
         } else {
             Some(postbuf.to_string())
         })

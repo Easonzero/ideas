@@ -111,13 +111,16 @@ impl<'a> Interaction<'a> {
 
         self.core
             .question("? Please enter the summary", "[option]")?;
-        item.summary = self.core.read_input_with(Some(item.summary))?.unwrap();
+        item.summary = self
+            .core
+            .read_input_with(false, Some(item.summary))?
+            .unwrap();
         self.core
             .question("? Please enter the detail", "[option]")?;
-        item.detail = self.core.read_input_with(item.detail)?;
+        item.detail = self.core.read_input_with(true, item.detail)?;
         self.core
             .question("? Please enter the related url", "[option]")?;
-        item.url = self.core.read_input_with(item.url)?;
+        item.url = self.core.read_input_with(true, item.url)?;
         item.time = std::time::SystemTime::now();
         Ok(item)
     }
@@ -134,7 +137,7 @@ impl<'a> Interaction<'a> {
             .question("? Please enter the summary", "<required>")?;
         let summary = self
             .core
-            .read_input()
+            .read_input(false)
             .map_err(|e| Error::from(e))
             .and_then(|idea| match idea {
                 Some(idea) => Ok(idea),
@@ -147,10 +150,10 @@ impl<'a> Interaction<'a> {
         if !skip {
             self.core
                 .question("? Please enter the detail", "[option]")?;
-            detail = self.core.read_input()?;
+            detail = self.core.read_input(true)?;
             self.core
                 .question("? Please enter the related url", "[option]")?;
-            url = self.core.read_input()?;
+            url = self.core.read_input(true)?;
         } else {
             detail = None;
             url = None;
